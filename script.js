@@ -1,5 +1,5 @@
 const API_SECRET = 'f9GoCyOk2qxhWArlwti36MgkWwzZtsZa';
-const ENDPOINT = 'https://api.mercadolibre.com/sites/MLB';
+const ENDPOINT = 'https://api.mercadolibre.com';
 
 function createProductImageElement(imageSource) {
   const img = document.createElement('img');
@@ -31,10 +31,6 @@ function getSkuFromProductItem(item) {
   return item.querySelector('span.item__sku').innerText;
 }
 
-function cartItemClickListener(event) {
-  // coloque seu código aqui
-}
-
 function createCartItemElement({ sku, name, salePrice }) {
   const li = document.createElement('li');
   li.className = 'cart__item';
@@ -43,8 +39,27 @@ function createCartItemElement({ sku, name, salePrice }) {
   return li;
 }
 
+function cartItemClickListener(event) {
+  
+} 
+
+function addToCartListener(event){
+  const sku = getSkuFromProductItem(event.currentTarget.parentNode);
+  fetch(`${ENDPOINT}/items/${sku}`)
+  .then((response) => response.json())
+  .then((data) => {
+    const params = {
+      sku: data.id,
+      name: data.title,
+      salePrice: data.price,
+    };
+    console.log(params);
+    document.querySelector('.cart__items').append(createCartItemElement(params));
+  });
+}
+
 function loadProducts(query = 'caixa') {
-  fetch(`${ENDPOINT}/search?q=${query}`)
+  fetch(`${ENDPOINT}/sites/MLB/search?q=${query}`)
   .then((response) => response.json())
   .then((data) => {
     data.results.forEach((product) => {
@@ -55,6 +70,9 @@ function loadProducts(query = 'caixa') {
       };
       document.querySelector('.items').append(createProductItemElement(params));
     });
+    document.querySelectorAll('.item__add').forEach(((button) => {
+      button.addEventListener('click', (event) => addToCartListener(event));
+    }));
   });
 }
 
