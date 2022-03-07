@@ -52,40 +52,60 @@ function createCartItemElement({ sku, name, salePrice }) {
   return li;
 }
 
+function makeRequest(path) {
+  return new Promise((resolve, reject) => {
+    fetch(path).then((response) => {
+      const result = response.json();
+      resolve(result);
+    }).catch((error) => {
+      reject(error);
+    });
+  });
+}
+
+function sumTotalPrice() {
+  let cart = JSON.parse(localStorage.getItem('cart'));
+  let sum = 0;
+  if (!cart) cart = [];
+  cart.forEach((product) => {
+    console.log(product.salePrice);
+    sum += product.salePrice;
+  });
+  document.querySelector('.total-price').innerText = sum;
+}
+
 function addToCartListener(event) {
   const sku = getSkuFromProductItem(event.currentTarget.parentNode);
-  fetch(`${ENDPOINT}/items/${sku}`)
-    .then((response) => response.json())
-    .then((data) => {
-      const params = {
-        sku: data.id,
-        name: data.title,
-        salePrice: data.price,
-      };
-      document.querySelector('.cart__items').append(createCartItemElement(params));
-      let cart = JSON.parse(localStorage.getItem('cart'));
-      if (!cart) cart = [];
-      cart.push(params);
-      localStorage.setItem('cart', JSON.stringify(cart));
-    });
+  makeRequest(`${ENDPOINT}/items/${sku}`).then((data) => {
+    const params = {
+      sku: data.id,
+      name: data.title,
+      salePrice: data.price,
+    };
+    document.querySelector('.cart__items').append(createCartItemElement(params));
+    let cart = JSON.parse(localStorage.getItem('cart'));
+    if (!cart) cart = [];
+    cart.push(params);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    sumTotalPrice();
+  });
 }
 
 function loadProducts(query = 'caixa') {
-  fetch(`${ENDPOINT}/sites/MLB/search?q=${query}`)
-    .then((response) => response.json())
-    .then((data) => {
-      data.results.forEach((product) => {
-        const params = {
-          sku: product.id,
-          name: product.title,
-          image: product.thumbnail,
-        };
-        document.querySelector('.items').append(createProductItemElement(params));
-      });
-      document.querySelectorAll('.item__add').forEach(((button) => {
-        button.addEventListener('click', addToCartListener);
-      }));
+  makeRequest(`${ENDPOINT}/sites/MLB/search?q=${query}`).then((data) => {
+    console.log(data);
+    data.results.forEach((product) => {
+      const params = {
+        sku: product.id,
+        name: product.title,
+        image: product.thumbnail,
+      };
+      document.querySelector('.items').append(createProductItemElement(params));
     });
+    document.querySelectorAll('.item__add').forEach(((button) => {
+      button.addEventListener('click', addToCartListener);
+    }));
+  });
 }
 
 function loadCart() {
@@ -93,6 +113,7 @@ function loadCart() {
   if (!cart) cart = [];
   cart.forEach((product) => document.querySelector('.cart__items')
     .append(createCartItemElement(product)));
+  sumTotalPrice();
 }
 
 window.onload = () => {
