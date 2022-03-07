@@ -1,3 +1,6 @@
+const API_SECRET = 'f9GoCyOk2qxhWArlwti36MgkWwzZtsZa';
+const ENDPOINT = 'https://api.mercadolibre.com/sites/MLB';
+
 function createProductImageElement(imageSource) {
   const img = document.createElement('img');
   img.className = 'item__image';
@@ -40,4 +43,21 @@ function createCartItemElement({ sku, name, salePrice }) {
   return li;
 }
 
-window.onload = () => { };
+function loadProducts(query = 'caixa') {
+  fetch(`${ENDPOINT}/search?q=${query}`)
+  .then((response) => response.json())
+  .then((data) => {
+    data.results.forEach((product) => {
+      const params = {
+        sku: product.id,
+        name: product.title,
+        image: product.thumbnail,
+      };
+      document.querySelector('.items').append(createProductItemElement(params));
+    });
+  });
+}
+
+window.onload = () => {
+  loadProducts();
+};
