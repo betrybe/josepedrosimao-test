@@ -1,5 +1,5 @@
-const API_SECRET = 'f9GoCyOk2qxhWArlwti36MgkWwzZtsZa';
 const ENDPOINT = 'https://api.mercadolibre.com';
+const CART_ITEMS_CLASS = '.cart__items';
 
 function createProductImageElement(imageSource) {
   const img = document.createElement('img');
@@ -36,7 +36,6 @@ function sumTotalPrice() {
   let sum = 0;
   if (!cart) cart = [];
   cart.forEach((product) => {
-    console.log(product.salePrice);
     sum += product.salePrice;
   });
   document.querySelector('.total-price').innerText = sum;
@@ -57,7 +56,7 @@ function cartItemClickListener(event) {
 
 function createCartItemElement({ sku, name, salePrice }) {
   const li = document.createElement('li');
-  li.className = 'cart__item';
+  li.className = CART_ITEMS_CLASS;
   li.dataset.sku = sku;
   li.innerText = `SKU: ${sku} | NAME: ${name} | PRICE: $${salePrice}`;
   li.addEventListener('click', cartItemClickListener);
@@ -65,9 +64,14 @@ function createCartItemElement({ sku, name, salePrice }) {
 }
 
 function makeRequest(path) {
+  const loading = document.createElement('p');
+  loading.className = 'loading';
+  loading.innerText = 'Loading...';
+  document.querySelector('body').prepend(loading);
   return new Promise((resolve, reject) => {
     fetch(path).then((response) => {
       const result = response.json();
+      document.querySelector('.loading').remove();
       resolve(result);
     }).catch((error) => {
       reject(error);
@@ -83,7 +87,7 @@ function addToCartListener(event) {
       name: data.title,
       salePrice: data.price,
     };
-    document.querySelector('.cart__items').append(createCartItemElement(params));
+    document.querySelector(CART_ITEMS_CLASS).append(createCartItemElement(params));
     let cart = JSON.parse(localStorage.getItem('cart'));
     if (!cart) cart = [];
     cart.push(params);
@@ -92,15 +96,14 @@ function addToCartListener(event) {
   });
 }
 
-function emptyCartListener(event) {
+function emptyCartListener() {
   localStorage.removeItem('cart');
-  document.querySelector('.cart__items').innerHTML='';
+  document.querySelector(CART_ITEMS_CLASS).innerHTML = '';
   sumTotalPrice();
 }
 
 function loadProducts(query = 'caixa') {
   makeRequest(`${ENDPOINT}/sites/MLB/search?q=${query}`).then((data) => {
-    console.log(data);
     data.results.forEach((product) => {
       const params = {
         sku: product.id,
@@ -118,7 +121,7 @@ function loadProducts(query = 'caixa') {
 function loadCart() {
   let cart = JSON.parse(localStorage.getItem('cart'));
   if (!cart) cart = [];
-  cart.forEach((product) => document.querySelector('.cart__items')
+  cart.forEach((product) => document.querySelector(CART_ITEMS_CLASS)
     .append(createCartItemElement(product)));
   sumTotalPrice();
 }
