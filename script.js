@@ -8,7 +8,7 @@ function createProductImageElement(imageSource) {
   return img;
 }
 
-function createCustomElement(element, className, innerText) {
+function createCustomElement(element, className, innerText = '') {
   const e = document.createElement(element);
   e.className = className;
   e.innerText = innerText;
@@ -22,7 +22,13 @@ function createProductItemElement({ sku, name, image }) {
   section.appendChild(createCustomElement('span', 'item__sku', sku));
   section.appendChild(createCustomElement('span', 'item__title', name));
   section.appendChild(createProductImageElement(image));
-  section.appendChild(createCustomElement('button', 'item__add', 'Adicionar ao carrinho!'));
+  const itemAdd = createCustomElement('button', 'item__add');
+  const addButton = document.createElement('span');
+  addButton.className = 'material-icons-outlined';
+  addButton.innerText = 'add_shopping_cart';
+  addButton.title = 'Adicionar ao carrinho';
+  itemAdd.appendChild(addButton);
+  section.appendChild(itemAdd);
 
   return section;
 }
@@ -64,16 +70,18 @@ function createCartItemElement({ sku, name, salePrice }) {
 }
 
 function makeRequest(path) {
-  const loading = document.createElement('p');
-  loading.className = 'loading';
-  loading.innerText = 'Loading...';
-  document.querySelector('body').prepend(loading);
+  const navbar = document.querySelector('#navbar');
+  navbar.parentNode
+    .insertBefore(createCustomElement('p', 'loading', 'Loading...'), navbar.nextSibling);
   return new Promise((resolve, reject) => {
     fetch(path).then((response) => {
       const result = response.json();
       document.querySelector('.loading').remove();
       resolve(result);
     }).catch((error) => {
+      document.querySelector('.loading').remove();
+      const errorMsg = createCustomElement('p', 'error', 'Erro ao executar requisição');
+      document.querySelector('body').prepend(errorMsg);
       reject(error);
     });
   });
@@ -103,6 +111,7 @@ function emptyCartListener() {
 }
 
 function loadProducts(query = 'caixa') {
+  document.querySelector('.items').innerHTML = '';
   makeRequest(`${ENDPOINT}/sites/MLB/search?q=${query}`).then((data) => {
     data.results.forEach((product) => {
       const params = {
@@ -131,4 +140,8 @@ window.onload = () => {
   loadCart();
   sumTotalPrice();
   document.querySelector('.empty-cart').addEventListener('click', emptyCartListener);
+  document.querySelector('#search-btn').addEventListener('click', (event) => {
+    event.preventDefault();
+    loadProducts(document.querySelector('#query').value);
+  });
 };
