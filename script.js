@@ -44,7 +44,7 @@ function sumTotalPrice() {
   cart.forEach((product) => {
     sum += product.salePrice;
   });
-  document.querySelector('.total-price').innerText = sum.toFixed(2);
+  document.querySelector('.total-price').innerText = sum;
 }
 
 function cartItemClickListener(event) {
